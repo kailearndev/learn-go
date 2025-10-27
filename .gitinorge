@@ -1,0 +1,33 @@
+# Binaries for Go
+
+_.exe
+_.darwin
+_.linux
+_.windows
+_.freebsd
+_.netbsd
+_.openbsd
+_.solaris
+
+# Go build cache
+
+/go.mod
+/go.sum
+/vendor/
+
+# Air live reload artifacts
+
+# This ignores the temporary directory where Air stores its build output.
+
+/tmp/
+
+# IDE specific files (optional, depending on your IDE)
+
+.idea/
+.vscode/
+\*.iml
+
+# Other common ignored files
+
+.DS_Store
+Thumbs.db
