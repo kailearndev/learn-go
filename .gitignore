@@ -1,35 +1,43 @@
 # Binaries for Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-_.exe
-_.darwin
-_.linux
-_.windows
-_.freebsd
-_.netbsd
-_.openbsd
-_.solaris
+# Test binaries and coverage artifacts
+*.test
+*.out
 
-# Go build cache
+# Optional OS-specific binary suffixes
+*.darwin
+*.linux
+*.windows
+*.freebsd
+*.netbsd
+*.openbsd
+*.solaris
 
-/go.mod
-/go.sum
-/vendor/
+# Build artifacts (adjust as needed)
+bin/
+build/
+dist/
 
-# Air live reload artifacts
+# Air live reload artifacts (temporary build output)
+tmp/
 
-# This ignores the temporary directory where Air stores its build output.
-
-/tmp/
-
-# IDE specific files (optional, depending on your IDE)
-
+# IDE/editor files
 .idea/
 .vscode/
-\*.iml
+*.iml
 
-# Other common ignored files
-
+# OS junk
 .DS_Store
 Thumbs.db
 
+# Environment files
 .env
+
+# Dependencies
+# Keep go.mod and go.sum tracked. Uncomment the next line only if you never vendor deps.
+# vendor/
