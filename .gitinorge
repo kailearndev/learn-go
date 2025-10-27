@@ -31,3 +31,5 @@ _.solaris
 
 .DS_Store
 Thumbs.db
+
+.env
