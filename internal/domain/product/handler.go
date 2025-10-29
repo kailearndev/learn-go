@@ -23,8 +23,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	g := r.Group("/products")
 	{
 		g.GET("/", h.ListProducts)
-		g.GET("/:id", h.GetProductByID)
 		g.POST("/", h.CreateProduct)
+		g.GET("/:id", h.GetProductByID)
 		g.PUT("/:id", h.UpdateProduct)
 		g.DELETE("/:id", h.DeleteProduct)
 	}
@@ -61,21 +61,30 @@ func (h *Handler) ListProducts(c *gin.Context) {
 }
 
 func (h *Handler) CreateProduct(c *gin.Context) {
+	userID := c.GetString("userID")
+	email := c.GetString("email")
+
 	var product ProductRequest
 	if err := c.ShouldBindJSON(&product); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	p, err := h.service.CreateProduct(product)
+	p, err := h.service.CreateProduct(uuid.MustParse(userID), email, product)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	response.Created(c, p)
+	response.Created(c, gin.H{
+		"createdBy":   email,
+		"productName": p.Name,
+		"productID":   p.ID,
+		"productSKU":  p.SKU,
+	})
 }
 
 func (h *Handler) GetProductByID(c *gin.Context) {
 	id := c.Param("id")
+
 	p, err := h.service.GetProductByID(uuid.MustParse(id))
 	if err != nil {
 		response.Error(c, http.StatusNotFound, err.Error())

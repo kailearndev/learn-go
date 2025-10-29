@@ -11,7 +11,11 @@ import (
 
 type Service interface {
 	RegisterUser(req RegisterUserDTO) (User, error)
+	GetUserByID(id uuid.UUID) (User, error)
+	UpdateUser(id uuid.UUID, req RegisterUserDTO) (User, error)
+	DeleteUser(id uuid.UUID) error
 	LoginUser(req LoginUserDTO) (string, error)
+	ListUsers(limit, offset int) ([]User, int64, error)
 }
 
 type service struct {
@@ -20,6 +24,22 @@ type service struct {
 
 func NewService(r Repository) Service {
 	return &service{repo: r}
+}
+
+func (s *service) GetUserByID(id uuid.UUID) (User, error) {
+	return s.repo.FindByID(id)
+}
+
+func (s *service) ListUsers(limit, offset int) ([]User, int64, error) {
+	items, err := s.repo.FindAll(limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	count, err := s.repo.Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	return items, count, nil
 }
 
 func (s *service) RegisterUser(req RegisterUserDTO) (User, error) {
@@ -58,4 +78,29 @@ func (s *service) LoginUser(req LoginUserDTO) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+func (s *service) UpdateUser(id uuid.UUID, req RegisterUserDTO) (User, error) {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		return User{}, err
+	}
+	user.Username = req.Username
+	user.Email = req.Email
+	user.FullName = req.FullName
+	user.Role = req.Role
+	user.AvatarURL = req.AvatarURL
+	if req.Password != "" {
+		hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		user.Password = string(hash)
+	}
+	if err := s.repo.UpdateUser(&user); err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+func (s *service) DeleteUser(id uuid.UUID) error {
+	return s.repo.DeleteUser(id)
+}
+func (s *service) CountProducts() (int64, error) {
+	return s.repo.Count()
 }

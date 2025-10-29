@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"kai-shop-be/internal/domain/category"
 	"kai-shop-be/internal/domain/product"
 	"kai-shop-be/internal/domain/upload"
 	"kai-shop-be/internal/domain/user"
@@ -21,18 +22,22 @@ func Run() {
 	if err := database.AutoMigrate(
 		&product.Product{},
 		&user.User{},
+		&category.Category{},
 	); err != nil {
 		log.Fatalln("❌ migrate failed:", err)
 	}
-
+	categoryRepo := category.NewRepository(database)
+	categoryService := category.NewService(categoryRepo)
+	categoryHandler := category.NewHandler(categoryService)
 	// 3. Init Repositories & Services
 	productRepo := product.NewRepository(database)
-	productService := product.NewService(productRepo)
+	productService := product.NewService(productRepo, categoryRepo)
 	productHandler := product.NewHandler(productService)
 	//// user
 	userRepo := user.NewRepository(database)
 	userService := user.NewService(userRepo)
 	userHandler := user.NewHandler(userService)
+	// category
 
 	// 4. Init CloudFly Storage
 	storage, err := cloudstorage.NewCloudFlyConfig(
@@ -49,11 +54,12 @@ func Run() {
 	uploadHandler := upload.NewHandler(storage)
 
 	// 6. Setup router with all handlers
-	router := server.SetupRouter(server.RouteConfig{
-		ProductHandler: productHandler,
-		UploadHandler:  uploadHandler,
-		UserHandler:    userHandler,
-	})
+	router := server.SetupRouter(
+		productHandler,
+		userHandler,
+		uploadHandler,
+		categoryHandler,
+	)
 
 	// 7. Run server
 	port := os.Getenv("PORT")

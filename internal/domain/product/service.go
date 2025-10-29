@@ -2,6 +2,7 @@ package product
 
 import (
 	"errors"
+	"kai-shop-be/internal/domain/category"
 
 	"github.com/google/uuid"
 )
@@ -9,18 +10,19 @@ import (
 type Service interface {
 	ListProducts(limit, offset int) ([]Product, int64, error)
 	GetProductByID(id uuid.UUID) (Product, error)
-	CreateProduct(p ProductRequest) (Product, error)
+	CreateProduct(userID uuid.UUID, email string, p ProductRequest) (Product, error)
 	UpdateProduct(id uuid.UUID, input ProductRequest) (Product, error)
 	DeleteProduct(id uuid.UUID) error
 	CountProducts() (int64, error)
 }
 
 type service struct {
-	repo Repository
+	repo         Repository
+	categoryRepo category.Repository
 }
 
-func NewService(r Repository) Service {
-	return &service{repo: r}
+func NewService(r Repository, c category.Repository) Service {
+	return &service{repo: r, categoryRepo: c}
 }
 
 func (s *service) ListProducts(limit, offset int) ([]Product, int64, error) {
@@ -44,20 +46,30 @@ func (s *service) GetProductByID(id uuid.UUID) (Product, error) {
 	return existing, nil
 }
 
-func (s *service) CreateProduct(req ProductRequest) (Product, error) {
+func (s *service) CreateProduct(userID uuid.UUID, email string, req ProductRequest) (Product, error) {
 	// validation cơ bản
 	if req.Name == "" {
 		return Product{}, errors.New("tên sản phẩm không được để trống")
 	}
-
+	if req.CategoryID == nil {
+		return Product{}, errors.New("category_id là bắt buộc")
+	}
+	catID := uuid.MustParse(*req.CategoryID)
+	_, err := s.categoryRepo.FindByID(catID)
+	if err != nil {
+		return Product{}, errors.New("category không tồn tại")
+	}
 	// map DTO -> model
 	product := Product{
-		Name:        req.Name,
-		SKU:         req.SKU,
-		Price:       req.Price,
-		Stock:       req.Stock,
-		ImageURLs:   req.ImageURLs,
-		Description: req.Description,
+		Name:          req.Name,
+		SKU:           req.SKU,
+		Price:         req.Price,
+		Stock:         req.Stock,
+		ImageURLs:     req.ImageURLs,
+		Description:   req.Description,
+		CreatedByName: email,
+		UserID:        userID,
+		CategoryID:    &catID,
 	}
 
 	// gọi repo

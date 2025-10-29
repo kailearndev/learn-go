@@ -29,14 +29,14 @@ func GenerateToken(userID, email string, duration time.Duration) (string, error)
 	return token.SignedString(jwtSecret)
 }
 
-func ParseToken(token string) (*Claims, error) {
-	parsedToken, err := jwt.ParseWithClaims(token, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+func ParseToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	if claims, ok := parsedToken.Claims.(*Claims); ok && parsedToken.Valid {
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
 	return nil, jwt.ErrTokenInvalidClaims
